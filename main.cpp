@@ -44,14 +44,13 @@
 #include <tclap/CmdLine.h>
 
 #include "DebugOut/HRConsoleOut.h"
-#include "../Tuvok/Controller/Controller.h"
-#include "../Tuvok/Basics/SysTools.h"
-#include "../Tuvok/Basics/SystemInfo.h"
-#include "../Tuvok/IO/AbstrConverter.h"
-#include "../Tuvok/IO/AbstrGeoConverter.h"
-#include "../Tuvok/IO/DirectoryParser.h"
-#include "../Tuvok/IO/IOManager.h"
-#include "../Tuvok/IO/TuvokIOError.h"
+#include <Controller/Controller.h>
+#include <Basics/SysTools.h>
+#include <Basics/SystemInfo.h>
+#include <IO/AbstrConverter.h>
+#include <IO/AbstrGeoConverter.h>
+#include <IO/DirectoryParser.h>
+#include <IO/IOManager.h>
 
 using namespace std;
 using namespace tuvok;
@@ -402,7 +401,7 @@ int main(int argc, const char* argv[])
           std::shared_ptr<Mesh> m;
           try {
             m = sourceConv->ConvertToMesh(strInFile);
-          } catch (const tuvok::io::DSOpenFailed& err) {
+          } catch ( std::exception& err) {
             cerr << "Error trying to open the input mesh "
                  << "(" << err.what() << ")\n";
             return EXIT_FAILURE_IN_MESH_LOAD;
