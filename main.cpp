@@ -137,7 +137,7 @@ int main(int argc, const char* argv[])
   bool debug;
   uint32_t bricksize = 64;
   uint32_t bricklayout = 0; // 0 is default scanline layout
-  const uint32_t brickoverlap = 2;
+  uint32_t brickoverlap = 2;
   uint32_t compression = 1; // 1 is default zlib compression
   uint32_t level = 1; // generic compression level 1 is best speed
 
@@ -162,7 +162,10 @@ int main(int argc, const char* argv[])
                                   false, 0.0, "floating point number");
     TCLAP::ValueArg<uint32_t> opt_bricksize("c", "bricksize",
                                         "set maximum brick size (64)", false,
-                                        64, "positive integer");
+                                        256, "positive integer");
+    TCLAP::ValueArg<uint32_t> opt_brickoverlap("r", "brickoverlap",
+                                        "set brick overlap", false,
+                                        4, "positive integer");
     TCLAP::ValueArg<uint32_t> opt_bricklayout("l", "bricklayout", "brick layout"
                                       " on disk 0: scanline, 1: morton, 2: "
                                       "hilbert, 3: random order", false, 0,
@@ -184,6 +187,7 @@ int main(int argc, const char* argv[])
     cmd.add(bias);
     cmd.add(scale);
     cmd.add(opt_bricksize);
+    cmd.add(opt_brickoverlap);
     cmd.add(opt_bricklayout);
     cmd.add(opt_compression);
     cmd.add(opt_level);
@@ -208,6 +212,7 @@ int main(int argc, const char* argv[])
     fScale = scale.getValue();
     bricksize = opt_bricksize.getValue();
     bricklayout = opt_bricklayout.getValue();
+    brickoverlap = opt_brickoverlap.getValue();
     compression = opt_compression.getValue();
     level = opt_level.getValue();
 
