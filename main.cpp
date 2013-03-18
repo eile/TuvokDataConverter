@@ -135,6 +135,7 @@ int main(int argc, const char* argv[])
   double fScale = 0.0;
   double fBias = 0.0;
   bool debug;
+  bool quantizeTo8bits;
   uint32_t bricksize = 64;
   uint32_t bricklayout = 0; // 0 is default scanline layout
   uint32_t brickoverlap = 2;
@@ -181,6 +182,8 @@ int main(int argc, const char* argv[])
     TCLAP::SwitchArg dbg("g", "debug", "Enable debugging mode", false);
     TCLAP::SwitchArg experim("", "experimental",
                              "Enable experimental features", false);
+    TCLAP::SwitchArg quantize("q", "quantize", "Quantize to 8 bits", false);
+
     
     cmd.xorAdd(inputs, directory);
     cmd.add(output);
@@ -194,6 +197,7 @@ int main(int argc, const char* argv[])
     cmd.add(expr);
     cmd.add(dbg);
     cmd.add(experim);
+    cmd.add(quantize);
     cmd.parse(argc, argv);
 
     // which of "-i" or "-d" did they give?
@@ -215,6 +219,7 @@ int main(int argc, const char* argv[])
     brickoverlap = opt_brickoverlap.getValue();
     compression = opt_compression.getValue();
     level = opt_level.getValue();
+    quantizeTo8bits = quantize.getValue();
 
     if(expr.isSet()) {
       expression = expr.getValue();
@@ -498,7 +503,7 @@ int main(int argc, const char* argv[])
     for (size_t i = 0;i<dirinfo.size();i++) {
       if (ioMan.ConvertDataset(&*dirinfo[i], vStrFilenames[i],
                                SysTools::GetPath(vStrFilenames[i]),
-                               bricksize, brickoverlap, false)) {
+                               bricksize, brickoverlap, quantizeTo8bits)) {
         cout << "\nSuccess.\n\n";
       } else {
         cout << "\nConversion failed!\n\n";
