@@ -1,11 +1,16 @@
 # Minumum build script for building the Tuvok library needed for Tuvok Commandline UVF converter
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required( VERSION 2.8 )
 project( TuvokCmdLineConverter )
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake )
+if( NOT BUILDYARD )
+  include( Buildyard )
+  return( )
+endif( )
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeLocal)
-find_package( TuvokLibrary REQUIRED )
-find_package( Qt4 REQUIRED QtCore QtGui QtOpenGL )
+include(Common)
+include(InstallFiles)
+include(FindPackages)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
@@ -17,6 +22,7 @@ if( ${CMAKE_COMPILER_IS_GNUCXX} )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -fno-strict-aliasing" )
 endif( ${CMAKE_COMPILER_IS_GNUCXX} )
 
+message( "zzzzzz ${TUVOK_INCLUDE_DIR}" )
 
 include_directories( ${TUVOK_INCLUDE_DIR}
                      ${TUVOK_INCLUDE_DIR}/exception
@@ -27,11 +33,7 @@ include_directories( ${TUVOK_INCLUDE_DIR}
 set( TUVOKCMDLINECONVERTER_SOURCES  ${CMAKE_SOURCE_DIR}/main.cpp
                                     ${CMAKE_SOURCE_DIR}/DebugOut/HRConsoleOut.cpp )
 
-include(${QT_USE_FILE})
-add_definitions(${QT_DEFINITIONS})
-link_directories( /usr/lib )
 
-message( STATUS ${QT_LIBRARIES} )
 add_executable( TuvokCmdLineConverter ${TUVOKCMDLINECONVERTER_SOURCES} )
-target_link_libraries ( TuvokCmdLineConverter ${TUVOK_LIBRARY} ${QT_LIBRARIES} )
+target_link_libraries ( TuvokCmdLineConverter ${TUVOK_LIBRARY} )
 install( TARGETS TuvokCmdLineConverter RUNTIME DESTINATION bin )

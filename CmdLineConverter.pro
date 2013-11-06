@@ -70,3 +70,6 @@ HEADERS += DebugOut/HRConsoleOut.h
 
 SOURCES += DebugOut/HRConsoleOut.cpp \
            main.cpp
+
+OTHER_FILES += \
+    CMakeLists.txt

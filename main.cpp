@@ -35,7 +35,7 @@
 //
 //!    Copyright (C) 2008 SCI Institute
 
-#include "../Tuvok/StdTuvokDefines.h"
+#include <StdTuvokDefines.h>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -44,6 +44,12 @@
 #include <tclap/CmdLine.h>
 
 #include "DebugOut/HRConsoleOut.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wshadow"
+
 #include <Controller/Controller.h>
 #include <Basics/SysTools.h>
 #include <Basics/SystemInfo.h>
@@ -52,6 +58,8 @@
 #include <IO/DirectoryParser.h>
 #include <IO/IOManager.h>
 #include <IO/uvfDataset.h>
+
+#pragma GCC diagnostic pop
 
 using namespace std;
 using namespace tuvok;
@@ -119,16 +127,7 @@ static std::string readfile(const std::string& filename)
 
 int main(int argc, const char* argv[])
 {
-/*
-// Enable run-time memory check for debug builds on windows
-  #ifdef _WIN32
-    #if defined(DEBUG) | defined(_DEBUG)
-      _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-    #endif
-  #endif
-*/
   std::vector<std::string> input;
-  std::string output, directory;
   std::string expression;
 
   // temp
