@@ -165,9 +165,9 @@ int main(int argc, const char* argv[])
                                       "(merging) scaling value for second file",
                                       false, 0.0, "floating point number");
         TCLAP::ValueArg<float> opt_mem("m", "memory",
-                                       "max allowed fraction of installed RAM to use"
-                                       " (0.05..0.95)",
-                                       false, 0.8f, "floating point number");
+                                       "max allowed memory to use in MB "
+                                       "16384",
+                                       false, 16384.0f, "floating point number");
         TCLAP::ValueArg<uint32_t> opt_bricksize("c", "bricksize",
                                                 "set maximum brick size (64)", false,
                                                 256, "positive integer");
@@ -223,6 +223,7 @@ int main(int argc, const char* argv[])
         fBias = bias.getValue();
         fScale = scale.getValue();
         fMem = opt_mem.getValue();
+        std::cout << fMem << std::endl;
         bricksize = opt_bricksize.getValue();
         bricklayout = opt_bricklayout.getValue();
         brickoverlap = opt_brickoverlap.getValue();
@@ -250,17 +251,8 @@ int main(int argc, const char* argv[])
     }
 
     Controller::Instance().AddDebugOut(debugOut);
-    if (fMem < 0.05f) {
-        fMem = 0.05f;
-        MESSAGE("Clamped max allowed RAM utilization to: %.2f%%", fMem * 100);
-    } else if (fMem > 0.95) {
-        fMem = 0.95f;
-        MESSAGE("Clamped max allowed RAM utilization to: %.2f%%", fMem * 100);
-    } else {
-        MESSAGE("Max allowed RAM utilization: %.2f", fMem * 100);
-    }
-    const uint64_t memTotal = Controller::Const().SysInfo().GetCPUMemSize();
-    Controller::Instance().SetMaxCPUMem(memTotal * fMem);
+
+    Controller::Instance().SetMaxCPUMem(fMem);
     uint32_t mem = uint32_t(Controller::Instance().SysInfo()->GetMaxUsableCPUMem()/1024/1024);
     MESSAGE("Using up to %u MB RAM", mem);
     cout << endl;

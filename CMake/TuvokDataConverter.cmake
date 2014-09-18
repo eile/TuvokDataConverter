@@ -1,6 +1,6 @@
 
 set(TUVOKDATACONVERTER_VERSION   1.0.0 )
-set(TUVOKDATACONVERTER_REPO_URL  https://github.com/bilgili/TuvokDataConverter.git )
+set(TUVOKDATACONVERTER_REPO_URL  https://github.com/BlueBrain/TuvokDataConverter.git )
 set(TUVOKDATACONVERTER_REPO_TAG  master )
 set(TUVOKDATACONVERTER_DEPENDS   REQUIRED Tuvok )
 set(TUVOKDATACONVERTER_NOTEST    ON)
