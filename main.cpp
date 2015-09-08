@@ -41,7 +41,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <tclap/CmdLine.h>
 
 #include "DebugOut/HRConsoleOut.h"
 
@@ -61,8 +60,13 @@
 
 #pragma GCC diagnostic pop
 
+#pragma warning( disable: 4275 )
+#  include <boost/program_options.hpp>
+#pragma warning( default: 4275 )
+
 using namespace std;
 using namespace tuvok;
+namespace po = boost::program_options;
 
 /*
 #ifdef _WIN32
@@ -126,7 +130,8 @@ static std::string readfile(const std::string& filename)
 
 int main(int argc, const char* argv[])
 {
-    std::vector<std::string> input;
+    typedef std::vector<std::string> Strings;
+    Strings input;
     std::string expression;
 
     // temp
@@ -136,8 +141,9 @@ int main(int argc, const char* argv[])
     string strOutFile;
     double fScale = 0.0;
     double fBias = 0.0;
-    bool debug;
-    bool quantizeTo8bits;
+    bool debug = false;
+    bool experimental = false;
+    bool quantizeTo8bits = false;
     uint32_t bricksize = 64;
     uint32_t bricklayout = 0; // 0 is default scanline layout
     uint32_t brickoverlap = 2;
@@ -147,100 +153,58 @@ int main(int argc, const char* argv[])
 
     try
     {
-        TCLAP::CmdLine cmd("uvf converter");
-        TCLAP::MultiArg<std::string> inputs("i", "input", "input file.  "
-                                            "Repeat to merge volumes", true,
-                                            "filename");
-        TCLAP::ValueArg<std::string> directory("d", "directory",
-                                               "input directory", true, "",
-                                               "path");
-        TCLAP::ValueArg<std::string> expr("e", "expression",
-                                          "merge expression", false, "", "string");
-        TCLAP::ValueArg<std::string> output("o", "output", "output file (uvf)",
-                                            true, "", "filename");
-        TCLAP::ValueArg<double> bias("b", "bias",
-                                     "(merging) bias value for second file",
-                                     false, 0.0, "floating point number");
-        TCLAP::ValueArg<double> scale("s", "scale",
-                                      "(merging) scaling value for second file",
-                                      false, 0.0, "floating point number");
-        TCLAP::ValueArg<float> opt_mem("m", "memory",
-                                       "max allowed memory to use in MB "
-                                       "16384",
-                                       false, 16384.0f, "floating point number");
-        TCLAP::ValueArg<uint32_t> opt_bricksize("c", "bricksize",
-                                                "set maximum brick size (64)", false,
-                                                256, "positive integer");
-        TCLAP::ValueArg<uint32_t> opt_brickoverlap("r", "brickoverlap",
-                                                   "set brick overlap", false,
-                                                   4, "positive integer");
-        TCLAP::ValueArg<uint32_t> opt_bricklayout("l", "bricklayout", "brick layout"
-                                                  " on disk 0: scanline, 1: morton, 2: "
-                                                  "hilbert, 3: random order", false, 0,
-                                                  "positive integer");
-        TCLAP::ValueArg<uint32_t> opt_compression("p", "compress", "UVF compression "
-                                                  "method 0: no compression, 1: zlib, "
-                                                  "2: lzma, 3: lz4, 4: bzlib, "
-                                                  "5: lzham",
-                                                  false, 1, "positive integer");
-        TCLAP::ValueArg<uint32_t> opt_level("v", "level", "UVF compression level "
-                                            "between (1..10)",
-                                            false, 1, "positive integer");
-        TCLAP::SwitchArg dbg("g", "debug", "Enable debugging mode", false);
-        TCLAP::SwitchArg experim("", "experimental",
-                                 "Enable experimental features", false);
-        TCLAP::SwitchArg quantize("q", "quantize", "Quantize to 8 bits", false);
+        po::options_description options( "uvf converter" );
+        std::string clientString("");
+        std::string serverString("");
+        bool showHelp(false);
 
+        options.add_options()
+          ( "help,h", po::bool_switch(&showHelp)->default_value( false ), "show help message" ),
+            ( "input,i", po::value< Strings >( &input ), "input file(s)" ),
+            ( "directory,d", po::value< std::string >( &strInDir ), "input directory" ),
+            ( "output,o", po::value< std::string >( &strOutFile ), "uvf output file" ),
+            ( "expression,e", po::value< std::string >( &expression ), "merge expression" ),
+            ( "bias,b", po::value< double >( &fBias ), "merge bias value for second file" ),
+            ( "scale,s", po::value< double >( &fScale ), "merge scale value for second file" ),
+            ( "memory,m", po::value< float >( &fMem ), "MB of maximum allowed memory usage" ),
+            ( "bricksize", po::value< uint32_t >( &bricksize ), "maximum brick size" ),
+            ( "brickoverlap", po::value< uint32_t >( &brickoverlap ), "brick overlap in voxels" ),
+            ( "bricklayout", po::value< uint32_t >( &bricklayout ), "brick layout on disk 0: scanline, 1: morton, 2: hilbert, 3: random order" ),
+            ( "compression", po::value< uint32_t >( &compression ), "UVF compression method 0: no compression, 1: zlib, 2: lzma, 3: lz4, 4: bzlib, 5: lzham" ),
+            ( "level", po::value< uint32_t >( &level ), "UVF compression level (1..10)" ),
+            ( "debug", po::bool_switch(&debug)->default_value( false ), "Enable debug mode" ),
+            ( "experimental", po::bool_switch(&experimental)->default_value( false ), "Enable experimental features" ),
+            ( "quantize,q", po::bool_switch(&quantizeTo8bits)->default_value( false ), "Quantize to 8 bits" );
 
-        cmd.xorAdd(inputs, directory);
-        cmd.add(output);
-        cmd.add(bias);
-        cmd.add(scale);
-        cmd.add(opt_mem);
-        cmd.add(opt_bricksize);
-        cmd.add(opt_brickoverlap);
-        cmd.add(opt_bricklayout);
-        cmd.add(opt_compression);
-        cmd.add(opt_level);
-        cmd.add(expr);
-        cmd.add(dbg);
-        cmd.add(experim);
-        cmd.add(quantize);
-        cmd.parse(argc, argv);
+        // parse program options
+        po::variables_map variableMap;
+        po::store( po::command_line_parser( argc, argv ).options(
+                       options ).allow_unregistered().run(), variableMap );
+        po::notify( variableMap );
+
+        // evaluate parsed arguments
+        if( showHelp )
+        {
+            std::cout << options << std::endl;
+            return EXIT_SUCCESS;
+        }
 
         // which of "-i" or "-d" did they give?
-        if(inputs.isSet()) {
-            strInFile = inputs.getValue()[0];
-            if(inputs.getValue().size() > 1) {
-                strInFile2 = inputs.getValue()[1];
-            }
-            input = inputs.getValue();
+        if( !input.empty()) {
+            strInFile = input.front();
+            if(input.size() > 1)
+                strInFile2 = input[1];
         }
-        if(directory.isSet()) {
-            strInDir = directory.getValue();
-        }
-        strOutFile = output.getValue();
-        fBias = bias.getValue();
-        fScale = scale.getValue();
-        fMem = opt_mem.getValue();
-        std::cout << fMem << std::endl;
-        bricksize = opt_bricksize.getValue();
-        bricklayout = opt_bricklayout.getValue();
-        brickoverlap = opt_brickoverlap.getValue();
-        compression = opt_compression.getValue();
-        level = opt_level.getValue();
-        quantizeTo8bits = quantize.getValue();
 
-        if(expr.isSet()) {
-            expression = expr.getValue();
-            if(SysTools::FileExists(expression)) {
-                expression = readfile(expression);
-            }
-        }
-        debug = dbg.getValue();
-        Controller::Instance().ExperimentalFeatures(experim.getValue());
-    } catch(const TCLAP::ArgException& e) {
-        std::cerr << "error: " << e.error() << " for arg " << e.argId() << "\n";
+        if(SysTools::FileExists(expression))
+            expression = readfile(expression);
+
+        Controller::Instance().ExperimentalFeatures( experimental );
+    }
+    catch( std::exception& exception )
+    {
+        std::cerr << "Command line parse error: " << exception.what()
+                  << std::endl;
         return EXIT_FAILURE_ARG;
     }
 
